@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Asistencia - CEBA Coronel Pedro Portillo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1b4d2b 0%, #2d6a3e 50%, #3d8b52 100%);
+            background-image: 
+                url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><defs><pattern id="selva" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="30" fill="%23165d31" opacity="0.3"/><circle cx="150" cy="120" r="40" fill="%230d3d1f" opacity="0.2"/><polygon points="40,80 60,20 80,80" fill="%232d6a3e" opacity="0.4"/><polygon points="100,100 130,40 160,100" fill="%231b4d2b" opacity="0.3"/></pattern></defs><rect width="1200" height="600" fill="%231b4d2b"/><rect width="1200" height="600" fill="url(%23selva)"/></svg>');
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0d3d1f 0%, #1b5d2f 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-bottom: 5px solid #f4a261;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-weight: bold;
+            color: #0d3d1f;
+            font-size: 0.95em;
+        }
+
+        select, input[type="date"], input[type="text"] {
+            padding: 12px;
+            border: 2px solid #2d6a3e;
+            border-radius: 8px;
+            font-size: 1em;
+            background-color: #f9f9f9;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #f4a261;
+            box-shadow: 0 0 5px rgba(244, 162, 97, 0.5);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0d3d1f 0%, #1b5d2f 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(13, 61, 31, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #d32f2f 0%, #f57c00 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(211, 47, 47, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00796b 0%, #00897b 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 121, 107, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f57c00 0%, #ffa726 100%);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 124, 0, 0.4);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #0277bd 0%, #0288d1 100%);
+            color: white;
+        }
+
+        .btn-info:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(2, 119, 189, 0.4);
+        }
+
+        .students-list {
+            margin-top: 30px;
+        }
+
+        .students-list h3 {
+            color: #0d3d1f;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 3px solid #f4a261;
+            padding-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #1b5d2f 0%, #2d6a3e 100%);
+            color: white;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tbody tr:hover {
+            background-color: #f0f0f0;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .asistencia-select {
+            padding: 8px;
+            border: 2px solid #2d6a3e;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .asistencia-select.presente {
+            background-color: #81c784;
+            color: white;
+        }
+
+        .asistencia-select.tarde {
+            background-color: #ffb74d;
+            color: white;
+        }
+
+        .asistencia-select.falta {
+            background-color: #e57373;
+            color: white;
+        }
+
+        .delete-btn {
+            background: #d32f2f;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .delete-btn:hover {
+            background: #c62828;
+        }
+
+        .input-student {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .input-student input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #2d6a3e;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .message {
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .message.success {
+            background-color: #c8e6c9;
+            color: #1b5e20;
+            border: 2px solid #81c784;
+        }
+
+        .message.error {
+            background-color: #ffcdd2;
+            color: #b71c1c;
+            border: 2px solid #e57373;
+        }
+
+        .message.info {
+            background-color: #b3e5fc;
+            color: #01579b;
+            border: 2px solid #4fc3f7;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state p {
+            font-size: 1.1em;
+        }
+
+        .date-nav {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .date-nav button {
+            padding: 10px 15px;
+        }
+
+        .current-date-display {
+            font-weight: bold;
+            color: #0d3d1f;
+            font-size: 1.1em;
+            background: #e8f5e9;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 2px solid #81c784;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .controls {
+                grid-template-columns: 1fr;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            table {
+                font-size: 0.9em;
+            }
+
+            th, td {
+                padding: 10px;
+            }
+
+            .date-nav {
+                flex-direction: column;
+            }
+
+            .date-nav button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌳 CEBA Coronel Pedro Portillo 🌳</h1>
+            <p>Sistema de Asistencia Escolar - Pucallpa</p>
+        </div>
+
+        <div class="content">
+            <div id="message"></div>
+
+            <div class="controls">
+                <div class="control-group">
+                    <label for="aula">Seleccionar Aula:</label>
+                    <select id="aula">
+                        <option value="">-- Selecciona una aula --</option>
+                        <option value="1B">1B</option>
+                        <option value="2B">2B</option>
+                        <option value="3B">3B</option>
+                        <option value="4B">4B</option>
+                        <option value="1A">1A</option>
+                        <option value="2A">2A</option>
+                        <option value="3A">3A</option>
+                        <option value="4A">4A</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="fecha">Seleccionar Fecha:</label>
+                    <input type="date" id="fecha">
+                </div>
+
+                <div class="control-group">
+                    <label for="alumnoInput">Agregar Alumno:</label>
+                    <div class="input-student">
+                        <input type="text" id="alumnoInput" placeholder="Nombre del alumno">
+                        <button class="btn-primary" onclick="agregarAlumno()">➕ Agregar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="date-nav">
+                <button class="btn-info" onclick="fechaAnterior()">⬅️ Día Anterior</button>
+                <span class="current-date-display" id="fechaDisplay"></span>
+                <button class="btn-info" onclick="fechaSiguiente()">➡️ Día Siguiente</button>
+            </div>
+
+            <div class="buttons">
+                <button class="btn-success" onclick="limpiarLista()">🗑️ Limpiar Lista</button>
+                <button class="btn-warning" onclick="descargarExcel()">📥 Descargar Excel</button>
+                <button class="btn-danger" onclick="avanzarAlDiaSiguiente()">📅 Avanzar al Siguiente Día</button>
+            </div>
+
+            <div class="students-list">
+                <h3>📋 Lista de Asistencia</h3>
+                <div id="tablaContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let estudiantes = {};
+        const aulaSelect = document.getElementById('aula');
+        const fechaInput = document.getElementById('fecha');
+        const alumnoInput = document.getElementById('alumnoInput');
+
+        // Inicializar con fecha de hoy
+        const hoy = new Date().toISOString().split('T')[0];
+        fechaInput.value = hoy;
+
+        // Cargar datos del localStorage
+        function cargarDatos() {
+            const datos = localStorage.getItem('asistenciaEscolar');
+            if (datos) {
+                estudiantes = JSON.parse(datos);
+            }
+        }
+
+        // Guardar datos en localStorage
+        function guardarDatos() {
+            localStorage.setItem('asistenciaEscolar', JSON.stringify(estudiantes));
+        }
+
+        // Actualizar display de fecha
+        function actualizarFechaDisplay() {
+            const fecha = new Date(fechaInput.value + 'T00:00:00');
+            const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const fechaFormato = fecha.toLocaleDateString('es-ES', opciones);
+            document.getElementById('fechaDisplay').textContent = fechaFormato.charAt(0).toUpperCase() + fechaFormato.slice(1);
+        }
+
+        // Navegar a fecha anterior
+        function fechaAnterior() {
+            const fecha = new Date(fechaInput.value);
+            fecha.setDate(fecha.getDate() - 1);
+            fechaInput.value = fecha.toISOString().split('T')[0];
+            actualizarFechaDisplay();
+            actualizarTabla();
+        }
+
+        // Navegar a fecha siguiente
+        function fechaSiguiente() {
+            const fecha = new Date(fechaInput.value);
+            fecha.setDate(fecha.getDate() + 1);
+            fechaInput.value = fecha.toISOString().split('T')[0];
+            actualizarFechaDisplay();
+            actualizarTabla();
+        }
+
+        // Avanzar al día siguiente manteniendo la lista de alumnos
+        function avanzarAlDiaSiguiente() {
+            if (!validarSeleccion()) return;
+
+            const aula = aulaSelect.value;
+            const fecha = fechaInput.value;
+            const key = `${aula}_${fecha}`;
+
+            if (!estudiantes[key] || estudiantes[key].length === 0) {
+                mostrarMensaje('No hay alumnos para copiar al siguiente día', 'error');
+                return;
+            }
+
+            // Calcular el siguiente día
+            const fechaSiguiente = new Date(fecha);
+            fechaSiguiente.setDate(fechaSiguiente.getDate() + 1);
+            const fechaSiguienteStr = fechaSiguiente.toISOString().split('T')[0];
+            const keyNuevo = `${aula}_${fechaSiguienteStr}`;
+
+            // Si ya existe lista para el siguiente día, preguntar si reemplazar
+            if (estudiantes[keyNuevo]) {
+                if (!confirm(`Ya hay una lista para el ${fechaSiguienteStr}. ¿Deseas reemplazarla con la actual?`)) {
+                    return;
+                }
+            }
+
+            // Copiar la lista al siguiente día con todos marcados como Presente
+            estudiantes[keyNuevo] = estudiantes[key].map(est => ({
+                nombre: est.nombre,
+                asistencia: 'Presente'
+            }));
+
+            guardarDatos();
+            
+            // Avanzar la fecha
+            fechaInput.value = fechaSiguienteStr;
+            actualizarFechaDisplay();
+            actualizarTabla();
+            
+            mostrarMensaje(`✓ Lista avanzada al ${fechaSiguienteStr}. Los alumnos están registrados para este día.`, 'success');
+        }
+
+        // Validar que aula y fecha estén seleccionadas
+        function validarSeleccion() {
+            if (!aulaSelect.value) {
+                mostrarMensaje('Por favor, selecciona una aula', 'error');
+                return false;
+            }
+            if (!fechaInput.value) {
+                mostrarMensaje('Por favor, selecciona una fecha', 'error');
+                return false;
+            }
+            return true;
+        }
+
+        // Agregar alumno a la lista
+        function agregarAlumno() {
+            if (!validarSeleccion()) return;
+
+            const nombre = alumnoInput.value.trim();
+            if (!nombre) {
+                mostrarMensaje('Por favor, ingresa el nombre del alumno', 'error');
+                return;
+            }
+
+            const aula = aulaSelect.value;
+            const fecha = fechaInput.value;
+            const key = `${aula}_${fecha}`;
+
+            if (!estudiantes[key]) {
+                estudiantes[key] = [];
+            }
+
+            // Verificar si el alumno ya existe
+            if (estudiantes[key].some(est => est.nombre.toLowerCase() === nombre.toLowerCase())) {
+                mostrarMensaje('Este alumno ya está en la lista', 'error');
+                return;
+            }
+
+            estudiantes[key].push({
+                nombre: nombre,
+                asistencia: 'Presente'
+            });
+
+            guardarDatos();
+            alumnoInput.value = '';
+            mostrarMensaje(`✓ ${nombre} agregado a la lista`, 'success');
+            actualizarTabla();
+        }
+
+        // Eliminar alumno
+        function eliminarAlumno(index) {
+            if (!validarSeleccion()) return;
+
+            const aula = aulaSelect.value;
+            const fecha = fechaInput.value;
+            const key = `${aula}_${fecha}`;
+
+            if (estudiantes[key]) {
+                const nombre = estudiantes[key][index].nombre;
+                estudiantes[key].splice(index, 1);
+                guardarDatos();
+                mostrarMensaje(`✓ ${nombre} eliminado de la lista`, 'success');
+                actualizarTabla();
+            }
+        }
+
+        // Cambiar asistencia
+        function cambiarAsistencia(index, valor) {
+            if (!validarSeleccion()) return;
+
+            const aula = aulaSelect.value;
+            const fecha = fechaInput.value;
+            const key = `${aula}_${fecha}`;
+
+            if (estudiantes[key]) {
+                estudiantes[key][index].asistencia = valor;
+                guardarDatos();
+                actualizarTabla();
+            }
+        }
+
+        // Mostrar/actualizar tabla
+        function actualizarTabla() {
+            if (!validarSeleccion()) {
+                document.getElementById('tablaContainer').innerHTML = '<div class="empty-state"><p>Selecciona un aula y una fecha para ver la lista</p></div>';
+                return;
+            }
+
+            const aula = aulaSelect.value;
+            const fecha = fechaInput.value;
+            const key = `${aula}_${fecha}`;
+
+            if (!estudiantes[key] || estudiantes[key].length === 0) {
+                document.getElementById('tablaContainer').innerHTML = '<div class="empty-state"><p>No hay alumnos registrados. Agrega algunos alumnos a la lista.</p></div>';
+                return;
+            }
+
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Nombre del Alumno</th>
+                            <th>Asistencia</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            estudiantes[key].forEach((est, index) => {
+                html += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${est.nombre}</td>
+                        <td>
+                            <select class="asistencia-select ${est.asistencia.toLowerCase()}" 
+                                    onchange="cambiarAsistencia(${index}, this.value)">
+                                <option value="Presente" ${est.asistencia === 'Presente' ? 'selected' : ''}>✓ Presente</option>
+                                <option value="Tarde" ${est.asistencia === 'Tarde' ? 'selected' : ''}>⏰ Tarde</option>
+                                <option value="Falta" ${est.asistencia === 'Falta' ? 'selected' : ''}>✗ Falta</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="delete-btn" onclick="eliminarAlumno(${index})">Eliminar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('tablaContainer').innerHTML = html;
+        }
+
+        // Limpiar lista
+        function limpiarLista() {
+            if (!validarSeleccion()) return;
+
+            if (confirm('¿Estás seguro de que quieres eliminar todos los alumnos de esta aula y fecha?')) {
+                const aula = aulaSelect.value;
+                const fecha = fechaInput.value;
+                const key = `${aula}_${fecha}`;
+                delete estudiantes[key];
+                guardarDatos();
+                mostrarMensaje('✓ Lista limpiada correctamente', 'success');
+                actualizarTabla();
+            }
+        }
+
+        // Descargar en Excel
+        function descargarExcel() {
+            if (!validarSeleccion()) return;
+
+            const aula = aulaSelect.value;
+            const fecha = fechaInput.value;
+            const key = `${aula}_${fecha}`;
+
+            if (!estudiantes[key] || estudiantes[key].length === 0) {
+                mostrarMensaje('No hay datos para descargar', 'error');
+                return;
+            }
+
+            // Preparar datos
+            let datos = [
+                ['CEBA Coronel Pedro Portillo', '', ''],
+                ['Pucallpa', '', ''],
+                ['', '', ''],
+                ['Aula:', aula, 'Fecha:', fecha],
+                ['', '', ''],
+                ['#', 'Nombre del Alumno', 'Asistencia']
+            ];
+
+            estudiantes[key].forEach((est, index) => {
+                datos.push([index + 1, est.nombre, est.asistencia]);
+            });
+
+            // Crear libro de trabajo
+            const ws = XLSX.utils.aoa_to_sheet(datos);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Asistencia');
+
+            // Ajustar ancho de columnas
+            ws['!cols'] = [
+                { wch: 5 },
+                { wch: 30 },
+                { wch: 15 }
+            ];
+
+            // Descargar
+            XLSX.writeFile(wb, `Asistencia_${aula}_${fecha}.xlsx`);
+            mostrarMensaje('✓ Archivo descargado correctamente', 'success');
+        }
+
+        // Mostrar mensajes
+        function mostrarMensaje(texto, tipo) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="message ${tipo}">${texto}</div>`;
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 3000);
+        }
+
+        // Event listeners
+        aulaSelect.addEventListener('change', actualizarTabla);
+        fechaInput.addEventListener('change', () => {
+            actualizarFechaDisplay();
+            actualizarTabla();
+        });
+        alumnoInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') agregarAlumno();
+        });
+
+        // Inicializar
+        cargarDatos();
+        actualizarFechaDisplay();
+        actualizarTabla();
+    </script>
+</body>
+</html>
